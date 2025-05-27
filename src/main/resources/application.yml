@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: orders
+  config:
+    import: "optional:configserver:http://localhost:8070"
+  datasource:
+    url: jdbc:h2:mem:test_db
+    username: sa
+    password: ''
+    driver-class-name: org.h2.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+
+eureka:
+  instance:
+    prefer-ip-address: true
+  client:
+    service-url:
+      defaultZone: http://localhost:8071/eureka
