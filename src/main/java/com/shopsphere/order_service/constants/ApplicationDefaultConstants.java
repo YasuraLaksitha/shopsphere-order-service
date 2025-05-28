@@ -1,6 +1,7 @@
 package com.shopsphere.order_service.constants;
 
 import com.shopsphere.order_service.utils.OrderStatus;
+import com.shopsphere.order_service.utils.PaymentMethod;
 
 public final class ApplicationDefaultConstants {
 

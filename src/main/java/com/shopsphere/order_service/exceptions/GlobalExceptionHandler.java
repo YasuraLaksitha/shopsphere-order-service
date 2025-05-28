@@ -21,8 +21,6 @@ import java.util.HashMap;
 @RequiredArgsConstructor
 public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
-    private final ObjectMapper mapper;
-
     @ExceptionHandler(value = {ResourceAlreadyExistException.class})
     public ResponseEntity<ErrorResponseDTO> handleResourceAlreadyExistException(final ResourceAlreadyExistException ex,
                                                                                                                  final WebRequest request) {
@@ -61,5 +59,18 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
                 errorMap.put(((FieldError) error).getField(), error.getDefaultMessage()));
 
         return ResponseEntity.badRequest().body(errorMap);
+    }
+
+    @ExceptionHandler(value = {ResourceNotFoundException.class})
+    public ResponseEntity<ErrorResponseDTO> handleResourceNotFoundException(final ResourceNotFoundException ex,
+                                                                            final WebRequest request) {
+        final ErrorResponseDTO responseDTO = ErrorResponseDTO.builder()
+                .status(HttpStatus.NOT_FOUND.name())
+                .message(ex.getMessage())
+                .path(request.getDescription(false))
+                .timestamp(LocalDateTime.now())
+                .build();
+
+        return new ResponseEntity<>(responseDTO, HttpStatus.NOT_FOUND);
     }
 }

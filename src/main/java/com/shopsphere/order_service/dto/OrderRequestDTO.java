@@ -22,6 +22,9 @@ public class OrderRequestDTO {
 
     private String orderStatus;
 
+    @NotNull(message = "Payment method is required")
+    private String paymentMethod;
+
     @NotNull(message = "Order price is required")
     @PositiveOrZero(message = "Order price should be positive or zero")
     private Double totalOrderPrice;
