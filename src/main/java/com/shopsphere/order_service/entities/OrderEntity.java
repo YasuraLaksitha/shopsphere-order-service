@@ -19,9 +19,11 @@ public class OrderEntity extends BaseEntity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long orderId;
 
+    private String code;
+
     private List<Long> orderItemIds;
 
     private OrderStatus orderStatus;
 
-    private String totalOrderPrice;
+    private Double totalOrderPrice;
 }
