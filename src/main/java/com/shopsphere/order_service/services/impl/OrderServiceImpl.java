@@ -5,6 +5,7 @@ import com.shopsphere.order_service.constants.ApplicationDefaultConstants;
 import com.shopsphere.order_service.dto.CheckoutRequestDTO;
 import com.shopsphere.order_service.dto.OrderItemDTO;
 import com.shopsphere.order_service.dto.OrderRequestDTO;
+import com.shopsphere.order_service.dto.StripeResponseDTO;
 import com.shopsphere.order_service.entities.OrderEntity;
 import com.shopsphere.order_service.entities.OrderItemEntity;
 import com.shopsphere.order_service.exceptions.ResourceAlreadyExistException;
@@ -12,6 +13,7 @@ import com.shopsphere.order_service.exceptions.ResourceNotFoundException;
 import com.shopsphere.order_service.repositories.OrderItemRepository;
 import com.shopsphere.order_service.repositories.OrderRepository;
 import com.shopsphere.order_service.services.IOrderService;
+import com.shopsphere.order_service.services.client.PaymentFeignClient;
 import com.shopsphere.order_service.utils.OrderStatus;
 import com.shopsphere.order_service.utils.PaymentMethod;
 import lombok.RequiredArgsConstructor;
@@ -32,8 +34,10 @@ public class OrderServiceImpl implements IOrderService {
 
     private final ObjectMapper objectMapper;
 
+    private final PaymentFeignClient paymentFeignClient;
+
     @Override
-    public void placeOrder(OrderRequestDTO orderRequest) {
+    public<T>  T placeOrder(OrderRequestDTO orderRequest) {
         orderRepository.findByCode(orderRequest.getCode()).ifPresent(existingOrder -> {
             throw new ResourceAlreadyExistException("Order", " code", orderRequest.getCode());
         });
@@ -50,7 +54,7 @@ public class OrderServiceImpl implements IOrderService {
         orderEntity.setOrderStatus(OrderStatus.PENDING);
         final OrderEntity savedOrder = orderRepository.save(orderEntity);
 
-        handlePaymentProcess(savedOrder);
+        return (T) getPaymentSessionURL(savedOrder, StripeResponseDTO.class);
     }
 
     private OrderEntity initializeOrder(final OrderRequestDTO request) {
@@ -76,17 +80,23 @@ public class OrderServiceImpl implements IOrderService {
         };
     }
 
-    private void handlePaymentProcess(final OrderEntity order) {
+    private <T> T getPaymentSessionURL(final OrderEntity order,Class<T> clazz) {
         final List<OrderItemDTO> orderItems = order.getOrderItemIds().stream()
                 .map(orderItemId -> objectMapper.convertValue(
                         orderItemRepository.findById(orderItemId), OrderItemDTO.class))
                 .toList();
 
         final CheckoutRequestDTO checkoutRequest = CheckoutRequestDTO.builder()
+                .orderId(order.getOrderId())
                 .orderItems(orderItems)
                 .paymentMethod(order.getPaymentMethod())
                 .build();
 
-        log.info("Checkout request: {}", checkoutRequest);
+        final var response = paymentFeignClient.handleStripeCheckoutRequest(checkoutRequest).getBody();
+
+        if(clazz.isInstance(response)){
+            return clazz.cast(response);
+        }
+        throw new UnsupportedOperationException("Unsupported payment method");
     }
 }

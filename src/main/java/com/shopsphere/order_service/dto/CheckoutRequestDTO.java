@@ -12,6 +12,8 @@ public class CheckoutRequestDTO {
 
     private PaymentMethod paymentMethod;
 
+    private Long orderId;
+
     private List<OrderItemDTO> orderItems;
 
 }

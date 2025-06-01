@@ -7,7 +7,8 @@ public interface IOrderService {
     /**
      *
      * @param orderRequest - order request
+     * @return
      *
      */
-    void placeOrder(final OrderRequestDTO orderRequest);
+    <T> T placeOrder(final OrderRequestDTO orderRequest);
 }
