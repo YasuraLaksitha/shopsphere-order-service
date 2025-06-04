@@ -18,7 +18,7 @@ public class OrderItemEntity extends BaseEntity {
 
     private Long orderId;
 
-    private Long productId;
+    private String productName;
 
     private Integer quantity;
 
