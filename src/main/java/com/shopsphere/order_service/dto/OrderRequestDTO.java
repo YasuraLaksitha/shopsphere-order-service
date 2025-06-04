@@ -28,4 +28,7 @@ public class OrderRequestDTO {
     @NotNull(message = "Order price is required")
     @PositiveOrZero(message = "Order price should be positive or zero")
     private Double totalOrderPrice;
+
+    @NotNull(message = "Shipping details required")
+    private ShippingRequestDTO shippingRequest;
 }
