@@ -16,6 +16,11 @@ spring:
     hibernate:
       ddl-auto: create
     show-sql: true
+  cloud:
+    stream:
+      bindings:
+        productUpdate-out-0:
+          destination: send-productUpdate
 
 eureka:
   instance:

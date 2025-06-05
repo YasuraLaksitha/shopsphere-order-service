@@ -25,4 +25,10 @@ public interface IOrderService {
      * @param orderStatus - order status
      */
     void updateOrderStatus(Long orderId, String orderStatus);
+
+    /**
+     *
+     * @param orderId - orderId
+     */
+    void sendProductUpdateRequest(final Long orderId);
 }

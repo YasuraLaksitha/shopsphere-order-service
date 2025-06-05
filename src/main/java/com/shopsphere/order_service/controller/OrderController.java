@@ -23,7 +23,6 @@ public class OrderController {
     @PostMapping("/user/create")
     public ResponseEntity<Object> placeOrder(@Valid @RequestBody final OrderRequestDTO orderRequestDTO) {
         final StripeResponseDTO stripeResponseDTO = orderService.placeOrder(orderRequestDTO);
-
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(stripeResponseDTO);
     }

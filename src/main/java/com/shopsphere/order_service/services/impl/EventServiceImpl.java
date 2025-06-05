@@ -1,8 +1,5 @@
 package com.shopsphere.order_service.services.impl;
 
-import com.shopsphere.order_service.entities.OrderEntity;
-import com.shopsphere.order_service.exceptions.ResourceNotFoundException;
-import com.shopsphere.order_service.repositories.OrderRepository;
 import com.shopsphere.order_service.services.IEventService;
 import com.shopsphere.order_service.services.IOrderService;
 import com.shopsphere.order_service.utils.OrderStatus;
@@ -15,8 +12,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class EventServiceImpl implements IEventService {
 
-    private final OrderRepository orderRepository;
-
     private final IOrderService orderService;
 
     @Override
@@ -25,34 +20,24 @@ public class EventServiceImpl implements IEventService {
         event.getDataObjectDeserializer().getObject().ifPresent(stripeObject -> {
 
             if (stripeObject instanceof Session session) {
-                final String orderId = session.getMetadata().get("orderId");
+                final long orderId = Long.parseLong(session.getMetadata().get("orderId"));
 
                 switch (event.getType()) {
                     case "checkout.session.completed" -> {
-                        final OrderEntity orderEntity = orderRepository.findById(Long.valueOf(orderId)).orElseThrow(
-                                () -> new ResourceNotFoundException("Order", "id", orderId)
-                        );
+                        orderService.updateOrderStatus(orderId,OrderStatus.PAID.name());
+                        orderService.sendProductUpdateRequest(orderId);
 
-                        orderEntity.setOrderStatus(OrderStatus.PAID);
-                        orderRepository.save(orderEntity);
                         try {
-                            orderService.handleShippingRequest(Long.valueOf(orderId));
+                            orderService.handleShippingRequest(orderId);
                         } catch (RuntimeException e) {
-                            orderService.updateOrderStatus(Long.valueOf(orderId), OrderStatus.FAILED.name());
+                            orderService.updateOrderStatus(orderId, OrderStatus.FAILED.name());
                             throw new RuntimeException(e);
                         }
                     }
 
                     case "payment_intent.payment_failed",
                          "checkout.session.async_payment_failed",
-                         "charge.failed" -> {
-                        final OrderEntity orderEntity = orderRepository.findById(Long.valueOf(orderId)).orElseThrow(
-                                () -> new ResourceNotFoundException("Order", "id", orderId)
-                        );
-
-                        orderEntity.setOrderStatus(OrderStatus.FAILED);
-                        orderRepository.save(orderEntity);
-                    }
+                         "charge.failed" -> orderService.updateOrderStatus(Long.valueOf(orderId), OrderStatus.FAILED.name());
                 }
             }
         });

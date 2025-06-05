@@ -17,11 +17,10 @@ import com.shopsphere.order_service.utils.OrderStatus;
 import com.shopsphere.order_service.utils.PaymentMethod;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 
 @Slf4j
 @Service
@@ -39,6 +38,8 @@ public class OrderServiceImpl implements IOrderService {
     private final ShippingFeignClient shippingFeignClient;
 
     private final ICacheService cacheService;
+
+    private StreamBridge streamBridge;
 
     @Override
     public <T> T placeOrder(OrderRequestDTO orderRequest) {
@@ -141,8 +142,23 @@ public class OrderServiceImpl implements IOrderService {
 
             if (OrderStatus.FAILED.name().equals(status))
                 orderEntity.setOrderStatus(OrderStatus.FAILED);
+            else if (OrderStatus.PAID.name().equals(status)) {
+                orderEntity.setOrderStatus(OrderStatus.PAID);
+            }
 
             orderRepository.save(orderEntity);
+        });
+    }
+
+    @Override
+    public void sendProductUpdateRequest(Long orderId) {
+        orderRepository.findById(orderId).ifPresent(orderEntity -> {
+            final Map<String, Integer> productQuantityMap = new HashMap<>();
+
+            orderItemRepository.findAllById(orderEntity.getOrderItemIds()).forEach(orderItemEntity ->
+                    productQuantityMap.put(orderItemEntity.getProductName(), orderItemEntity.getQuantity()));
+
+            streamBridge.send("productUpdate-out-0", productQuantityMap);
         });
     }
 }
