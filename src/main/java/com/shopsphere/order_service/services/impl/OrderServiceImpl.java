@@ -2,10 +2,7 @@ package com.shopsphere.order_service.services.impl;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.shopsphere.order_service.constants.ApplicationDefaultConstants;
-import com.shopsphere.order_service.dto.CheckoutRequestDTO;
-import com.shopsphere.order_service.dto.OrderItemDTO;
-import com.shopsphere.order_service.dto.OrderRequestDTO;
-import com.shopsphere.order_service.dto.ShippingRequestDTO;
+import com.shopsphere.order_service.dto.*;
 import com.shopsphere.order_service.entities.DestinationAddressEntity;
 import com.shopsphere.order_service.entities.OrderEntity;
 import com.shopsphere.order_service.entities.OrderItemEntity;
@@ -17,7 +14,9 @@ import com.shopsphere.order_service.repositories.OrderItemRepository;
 import com.shopsphere.order_service.repositories.OrderRepository;
 import com.shopsphere.order_service.repositories.ShippingDetailsCache;
 import com.shopsphere.order_service.services.IOrderService;
+import com.shopsphere.order_service.services.client.ICacheService;
 import com.shopsphere.order_service.services.client.PaymentFeignClient;
+import com.shopsphere.order_service.services.ShippingFeignClient;
 import com.shopsphere.order_service.utils.OrderStatus;
 import com.shopsphere.order_service.utils.PaymentMethod;
 import lombok.RequiredArgsConstructor;
@@ -41,9 +40,9 @@ public class OrderServiceImpl implements IOrderService {
 
     private final PaymentFeignClient paymentFeignClient;
 
-    private final DestinationAddressCache destinationAddressCache;
+    private final ShippingFeignClient shippingFeignClient;
 
-    private final ShippingDetailsCache shippingDetailsCache;
+    private final ICacheService cacheService;
 
     @Override
     public <T> T placeOrder(OrderRequestDTO orderRequest) {
@@ -63,11 +62,22 @@ public class OrderServiceImpl implements IOrderService {
         orderEntity.setOrderStatus(OrderStatus.PENDING);
         final OrderEntity savedOrder = orderRepository.save(orderEntity);
 
-        saveShippingDetailsInRedisCache(orderRequest.getShippingRequest(), savedOrder.getOrderId());
+        cacheService.saveIntoCache(orderRequest.getShippingRequest(), savedOrder.getOrderId());
 
         return getPaymentSessionURL(savedOrder);
     }
 
+    @Override
+    public ShippingResponseDTO handleShippingRequest(Long orderId) {
+        return shippingFeignClient.createShippingObject(cacheService.retrieveByOrderId(orderId))
+                .getBody();
+    }
+
+    /**
+     *
+     * @param request - order request Object
+     * @return - initialized order entity
+     */
     private OrderEntity initializeOrder(final OrderRequestDTO request) {
         final OrderEntity orderEntity = new OrderEntity();
 
@@ -80,6 +90,11 @@ public class OrderServiceImpl implements IOrderService {
         return orderRepository.save(orderEntity);
     }
 
+    /**
+     *
+     * @param paymentMethod - user preferred payment method
+     * @return - payment method Object
+     */
     private PaymentMethod getPaymentMethod(final String paymentMethod) {
 
         return switch (paymentMethod.toLowerCase()) {
@@ -108,31 +123,5 @@ public class OrderServiceImpl implements IOrderService {
             return (T) paymentFeignClient.handleStripeCheckoutRequest(checkoutRequest).getBody();
 
         throw new UnsupportedOperationException("Unsupported payment method");
-    }
-
-    private void saveShippingDetailsInRedisCache(final ShippingRequestDTO shippingRequestDTO, final Long orderId) {
-        final ShippingDetailsEntity shippingDetailsEntity = initializeShippingDetailsEntity(shippingRequestDTO, orderId);
-
-        final DestinationAddressEntity destinationAddressEntity = objectMapper
-                .convertValue(shippingRequestDTO.getCustomerAddress(), DestinationAddressEntity.class);
-        destinationAddressEntity.setCacheId(UUID.randomUUID());
-        destinationAddressEntity.setShippingDetailsCacheId(shippingDetailsEntity.getCacheId());
-        final DestinationAddressEntity savedAddressEntity = destinationAddressCache.save(destinationAddressEntity);
-
-        shippingDetailsEntity.setAddressCacheId(savedAddressEntity.getCacheId());
-        shippingDetailsCache.save(shippingDetailsEntity);
-    }
-
-    private ShippingDetailsEntity initializeShippingDetailsEntity(ShippingRequestDTO shippingRequestDTO, Long orderId) {
-        final ShippingDetailsEntity shippingDetailsEntity = objectMapper.convertValue(shippingRequestDTO, ShippingDetailsEntity.class);
-        shippingDetailsEntity.setCacheId(UUID.randomUUID());
-        shippingDetailsEntity.setOrderId(orderId);
-
-        return shippingDetailsCache.save(shippingDetailsEntity);
-    }
-
-    private ShippingRequestDTO formatShippingRequest(final ShippingRequestDTO shippingRequestDTO, final Long orderId) {
-        shippingRequestDTO.setOrderId(orderId);
-        return shippingRequestDTO;
     }
 }

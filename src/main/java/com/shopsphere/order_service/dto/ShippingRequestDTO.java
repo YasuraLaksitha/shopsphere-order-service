@@ -19,7 +19,7 @@ public class ShippingRequestDTO {
 
     @Valid
     @NotNull(message = "Destination address details required")
-    private DestinationAddressDTO customerAddress;
+    private DestinationAddressDTO destinationAddress;
 
     private boolean isShippingMethodExpress;
 }

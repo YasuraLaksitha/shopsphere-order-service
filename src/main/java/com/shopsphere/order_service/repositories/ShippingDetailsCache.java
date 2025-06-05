@@ -9,5 +9,6 @@ import java.util.UUID;
 
 @Repository
 public interface ShippingDetailsCache extends CrudRepository<ShippingDetailsEntity, UUID> {
-    Optional<ShippingDetailsEntity> findByAddressCacheId(UUID addressCacheId);
+
+    Optional<ShippingDetailsEntity> findByOrderId(Long addressCacheId);
 }

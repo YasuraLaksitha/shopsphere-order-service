@@ -4,6 +4,7 @@ import com.shopsphere.order_service.entities.OrderEntity;
 import com.shopsphere.order_service.exceptions.ResourceNotFoundException;
 import com.shopsphere.order_service.repositories.OrderRepository;
 import com.shopsphere.order_service.services.IEventService;
+import com.shopsphere.order_service.services.IOrderService;
 import com.shopsphere.order_service.utils.OrderStatus;
 import com.stripe.model.Event;
 import com.stripe.model.checkout.Session;
@@ -15,6 +16,8 @@ import org.springframework.stereotype.Service;
 public class EventServiceImpl implements IEventService {
 
     private final OrderRepository orderRepository;
+
+    private final IOrderService orderService;
 
     @Override
     public void handlePaymentEvent(Event event) {
@@ -32,6 +35,7 @@ public class EventServiceImpl implements IEventService {
 
                         orderEntity.setOrderStatus(OrderStatus.PAID);
                         orderRepository.save(orderEntity);
+                        orderService.handleShippingRequest(Long.valueOf(orderId));
                     }
 
                     case "payment_intent.payment_failed" ,

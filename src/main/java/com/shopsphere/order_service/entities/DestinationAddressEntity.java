@@ -3,16 +3,18 @@ package com.shopsphere.order_service.entities;
 import lombok.Data;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.redis.core.RedisHash;
+import org.springframework.data.redis.core.index.Indexed;
 
 import java.util.UUID;
 
 @Data
-@RedisHash(value = "customer_address")
+@RedisHash(value = "destination_address")
 public class DestinationAddressEntity {
 
     @Id
     private UUID cacheId;
 
+    @Indexed
     private UUID shippingDetailsCacheId;
 
     private String number;
