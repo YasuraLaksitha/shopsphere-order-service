@@ -35,10 +35,15 @@ public class EventServiceImpl implements IEventService {
 
                         orderEntity.setOrderStatus(OrderStatus.PAID);
                         orderRepository.save(orderEntity);
-                        orderService.handleShippingRequest(Long.valueOf(orderId));
+                        try {
+                            orderService.handleShippingRequest(Long.valueOf(orderId));
+                        } catch (RuntimeException e) {
+                            orderService.updateOrderStatus(Long.valueOf(orderId), OrderStatus.FAILED.name());
+                            throw new RuntimeException(e);
+                        }
                     }
 
-                    case "payment_intent.payment_failed" ,
+                    case "payment_intent.payment_failed",
                          "checkout.session.async_payment_failed",
                          "charge.failed" -> {
                         final OrderEntity orderEntity = orderRepository.findById(Long.valueOf(orderId)).orElseThrow(

@@ -16,7 +16,13 @@ public interface IOrderService {
     /**
      *
      * @param orderId - orderId
-     * @return
      */
     ShippingResponseDTO handleShippingRequest(final Long orderId);
+
+    /**
+     *
+     * @param orderId - orderID
+     * @param orderStatus - order status
+     */
+    void updateOrderStatus(Long orderId, String orderStatus);
 }

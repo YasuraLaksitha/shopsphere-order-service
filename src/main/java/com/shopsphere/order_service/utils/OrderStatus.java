@@ -1,6 +1,7 @@
 package com.shopsphere.order_service.utils;
 
 public enum OrderStatus {
+
     INITIATED,
 
     PENDING,
@@ -15,5 +16,7 @@ public enum OrderStatus {
 
     FAILED,
 
-    RETURNED
+    RETURNED,
+
+    RETRY
 }
