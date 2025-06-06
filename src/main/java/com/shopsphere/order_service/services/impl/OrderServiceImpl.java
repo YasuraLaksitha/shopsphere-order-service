@@ -18,8 +18,18 @@ import com.shopsphere.order_service.utils.PaymentMethod;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.stream.function.StreamBridge;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
+import java.time.Instant;
+import java.time.LocalDate;
+import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Slf4j
@@ -160,5 +170,60 @@ public class OrderServiceImpl implements IOrderService {
 
             streamBridge.send("productUpdate-out-0", productQuantityMap);
         });
+    }
+
+    @Override
+    public PaginationResponseDTO<OrderRequestDTO> filterOrders
+            (String sortBy, String sortOrder, int pageNumber, int pageSize, String orderDate) {
+
+        Specification<OrderEntity> spec = null;
+
+        if (StringUtils.hasText(orderDate)) {
+            final LocalDate localDate = this.formatDate(orderDate);
+
+            final Instant startOfDay = localDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
+            final Instant endOfDay = localDate.atTime(LocalTime.MAX).atZone(ZoneId.systemDefault()).toInstant();
+
+            spec = (root, query, criteriaBuilder) ->
+                    criteriaBuilder.between(root.get("createdAt"), startOfDay, endOfDay);
+        }
+
+        final Sort.Direction sortDir = ApplicationDefaultConstants.ORDER_SORT_ORDER.equalsIgnoreCase(sortOrder) ?
+                Sort.Direction.ASC :
+                Sort.Direction.DESC;
+        final Sort sortOrderBy = Sort.by(sortDir, sortBy);
+        final PageRequest pageRequest = PageRequest.of(pageNumber, pageSize, sortOrderBy);
+
+        Page<OrderEntity> orderEntityPage;
+        if (spec != null)
+            orderEntityPage = orderRepository.findAll(spec, pageRequest);
+        else
+            orderEntityPage = orderRepository.findAll(pageRequest);
+
+        final List<OrderRequestDTO> requestDTOS = orderEntityPage.getContent().stream().map(orderEntity -> {
+            final List<OrderItemDTO> itemDTOS = orderItemRepository.findAllById(orderEntity.getOrderItemIds())
+                    .stream().map(orderItemEntity ->
+                            objectMapper.convertValue(orderItemEntity, OrderItemDTO.class)
+                    ).toList();
+
+            final OrderRequestDTO orderRequestDTO = objectMapper.convertValue(orderEntity, OrderRequestDTO.class);
+            orderRequestDTO.setOrderItems(itemDTOS);
+
+            return orderRequestDTO;
+        }).toList();
+
+        return PaginationResponseDTO.<OrderRequestDTO>builder()
+                .data(requestDTOS)
+                .isLastPage(orderEntityPage.isLast())
+                .sortOrder(sortOrder)
+                .sortBy(sortBy)
+                .pageNumber(String.valueOf(pageNumber))
+                .pageSize(String.valueOf(pageSize))
+                .build();
+    }
+
+    private LocalDate formatDate(final String orderDate) {
+        final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        return LocalDate.parse(orderDate, formatter);
     }
 }
