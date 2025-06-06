@@ -8,7 +8,7 @@ import org.springframework.data.redis.core.index.Indexed;
 import java.util.UUID;
 
 @Data
-@RedisHash(value = "destination_address")
+@RedisHash(value = "destination_address", timeToLive = 900L)
 public class DestinationAddressEntity {
 
     @Id

@@ -8,8 +8,8 @@ import org.springframework.data.redis.core.index.Indexed;
 import java.util.UUID;
 
 @Data
-@RedisHash(value = "shipping_details")
-public class ShippingDetailsEntity  {
+@RedisHash(value = "shipping_details", timeToLive = 900L)
+public class ShippingDetailsEntity {
 
     @Id
     private UUID cacheId;
