@@ -39,7 +39,7 @@ public class OrderServiceImpl implements IOrderService {
 
     private final ICacheService cacheService;
 
-    private StreamBridge streamBridge;
+    private final StreamBridge streamBridge;
 
     @Override
     public <T> T placeOrder(OrderRequestDTO orderRequest) {

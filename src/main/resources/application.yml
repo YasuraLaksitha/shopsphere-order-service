@@ -21,6 +21,10 @@ spring:
       bindings:
         productUpdate-out-0:
           destination: send-productUpdate
+      kafka:
+        binder:
+          broker:
+            - localhost:9092
 
 eureka:
   instance:
