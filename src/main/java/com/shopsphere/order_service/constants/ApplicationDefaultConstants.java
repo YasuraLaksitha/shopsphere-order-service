@@ -16,5 +16,8 @@ public final class ApplicationDefaultConstants {
 
     public static final String ORDER_SORT_BY = "createdAt";
 
+    public static final String RESPONSE_MESSAGE_200 = "Process completed successfully";
+    public static final String RESPONSE_MESSAGE_417 = "Something went wrong. Try again later";
+
     private ApplicationDefaultConstants() {}
 }

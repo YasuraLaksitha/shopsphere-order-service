@@ -29,4 +29,6 @@ public class OrderEntity extends BaseEntity {
     private PaymentMethod paymentMethod;
 
     private Double totalOrderPrice;
+
+    private boolean isDeleted;
 }

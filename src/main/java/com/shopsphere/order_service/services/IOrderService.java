@@ -42,4 +42,11 @@ public interface IOrderService {
      * @return pagination response
      */
     PaginationResponseDTO<OrderRequestDTO> filterOrders(final String sortBy, final String sortOrder, final int pageNumber, final int pageSize, final String orderDate);
+
+    /**
+     *
+     * @param orderCode - order code
+     * @return - true if deleted
+     */
+    boolean deleteByOrderCode(final String orderCode);
 }

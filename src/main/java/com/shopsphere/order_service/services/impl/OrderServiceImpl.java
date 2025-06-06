@@ -176,7 +176,8 @@ public class OrderServiceImpl implements IOrderService {
     public PaginationResponseDTO<OrderRequestDTO> filterOrders
             (String sortBy, String sortOrder, int pageNumber, int pageSize, String orderDate) {
 
-        Specification<OrderEntity> spec = null;
+        Specification<OrderEntity> spec = (root, query, criteriaBuilder) ->
+                criteriaBuilder.isFalse(root.get("isDeleted"));
 
         if (StringUtils.hasText(orderDate)) {
             final LocalDate localDate = this.formatDate(orderDate);
@@ -184,8 +185,8 @@ public class OrderServiceImpl implements IOrderService {
             final Instant startOfDay = localDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
             final Instant endOfDay = localDate.atTime(LocalTime.MAX).atZone(ZoneId.systemDefault()).toInstant();
 
-            spec = (root, query, criteriaBuilder) ->
-                    criteriaBuilder.between(root.get("createdAt"), startOfDay, endOfDay);
+            spec = spec.and((root, query, criteriaBuilder) ->
+                    criteriaBuilder.between(root.get("createdAt"), startOfDay, endOfDay));
         }
 
         final Sort.Direction sortDir = ApplicationDefaultConstants.ORDER_SORT_ORDER.equalsIgnoreCase(sortOrder) ?
@@ -220,6 +221,17 @@ public class OrderServiceImpl implements IOrderService {
                 .pageNumber(String.valueOf(pageNumber))
                 .pageSize(String.valueOf(pageSize))
                 .build();
+    }
+
+    @Override
+    public boolean deleteByOrderCode(String orderCode) {
+        final OrderEntity orderEntity = orderRepository.findByCode(orderCode).orElseThrow(
+                () -> new ResourceNotFoundException("Order", "order code", orderCode)
+        );
+        orderEntity.setDeleted(true);
+        orderRepository.save(orderEntity);
+
+        return orderEntity.isDeleted();
     }
 
     private LocalDate formatDate(final String orderDate) {
