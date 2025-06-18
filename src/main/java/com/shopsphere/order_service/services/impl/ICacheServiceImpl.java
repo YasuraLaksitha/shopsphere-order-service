@@ -25,8 +25,8 @@ public class ICacheServiceImpl implements ICacheService {
     private final ObjectMapper objectMapper;
 
     @Override
-    public void saveIntoCache(ShippingRequestDTO shippingRequestDTO, Long orderId) {
-        final ShippingDetailsEntity shippingDetailsEntity = initializeShippingDetailsEntity(shippingRequestDTO, orderId);
+    public void saveIntoCache(ShippingRequestDTO shippingRequestDTO, Long orderId, String userId) {
+        final ShippingDetailsEntity shippingDetailsEntity = initializeShippingDetailsEntity(shippingRequestDTO, orderId,userId);
 
         final DestinationAddressEntity destinationAddressEntity = objectMapper
                 .convertValue(shippingRequestDTO.getDestinationAddress(), DestinationAddressEntity.class);
@@ -55,7 +55,7 @@ public class ICacheServiceImpl implements ICacheService {
         return shippingRequest;
     }
 
-    private ShippingDetailsEntity initializeShippingDetailsEntity(ShippingRequestDTO shippingRequestDTO, Long orderId) {
+    private ShippingDetailsEntity initializeShippingDetailsEntity(ShippingRequestDTO shippingRequestDTO, Long orderId,String userId) {
         final ShippingDetailsEntity shippingDetailsEntity = objectMapper.convertValue(shippingRequestDTO, ShippingDetailsEntity.class);
         shippingDetailsEntity.setCacheId(UUID.randomUUID());
         shippingDetailsEntity.setOrderId(orderId);

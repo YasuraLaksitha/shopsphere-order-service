@@ -14,7 +14,7 @@ public class CheckoutRequestDTO {
 
     private Long orderId;
 
-    private String userEmail;
+    private String userId;
 
     private List<OrderItemDTO> orderItems;
 

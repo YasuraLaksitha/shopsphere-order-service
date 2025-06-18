@@ -12,7 +12,7 @@ import com.shopsphere.order_service.repositories.OrderRepository;
 import com.shopsphere.order_service.services.IOrderService;
 import com.shopsphere.order_service.services.client.ICacheService;
 import com.shopsphere.order_service.services.client.PaymentFeignClient;
-import com.shopsphere.order_service.services.ShippingFeignClient;
+import com.shopsphere.order_service.services.client.ShippingFeignClient;
 import com.shopsphere.order_service.utils.OrderStatus;
 import com.shopsphere.order_service.utils.PaymentMethod;
 import lombok.RequiredArgsConstructor;
@@ -77,18 +77,18 @@ public class OrderServiceImpl implements IOrderService {
         final OrderEntity savedOrder = orderRepository.save(orderEntity);
 
         try {
-            cacheService.saveIntoCache(orderRequest.getShippingRequest(), savedOrder.getOrderId());
+            cacheService.saveIntoCache(orderRequest.getShippingRequest(), savedOrder.getOrderId(), savedOrder.getCreatedBy());
             if (savedOrder.getOrderStatus() != OrderStatus.PAID)
                 return getPaymentSessionURL(savedOrder);
         } catch (Exception e) {
             this.updateOrderStatus(savedOrder.getOrderId(), OrderStatus.FAILED.name());
             throw new RuntimeException(e);
         }
-        return (T) handleShippingRequest(savedOrder.getOrderId());
+        return (T) handleShippingRequest(savedOrder.getOrderId(), savedOrder.getCreatedBy());
     }
 
     @Override
-    public ShippingResponseDTO handleShippingRequest(Long orderId) {
+    public ShippingResponseDTO handleShippingRequest(Long orderId, String userId) {
         return shippingFeignClient.createShippingObject(cacheService.retrieveByOrderId(orderId)).getBody();
     }
 
@@ -134,7 +134,7 @@ public class OrderServiceImpl implements IOrderService {
         final CheckoutRequestDTO checkoutRequest = CheckoutRequestDTO.builder()
                 .orderId(order.getOrderId())
                 .orderItems(orderItems)
-                .userEmail(order.getCreatedBy())
+                .userId(order.getCreatedBy())
                 .paymentMethod(order.getPaymentMethod())
                 .build();
 

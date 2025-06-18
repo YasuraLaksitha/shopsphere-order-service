@@ -1,4 +1,4 @@
-package com.shopsphere.order_service.services;
+package com.shopsphere.order_service.services.client;
 
 import com.shopsphere.order_service.dto.ShippingRequestDTO;
 import com.shopsphere.order_service.dto.ShippingResponseDTO;
