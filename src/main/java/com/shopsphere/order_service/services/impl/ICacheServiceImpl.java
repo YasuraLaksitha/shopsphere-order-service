@@ -8,7 +8,7 @@ import com.shopsphere.order_service.entities.ShippingDetailsEntity;
 import com.shopsphere.order_service.exceptions.ResourceNotFoundException;
 import com.shopsphere.order_service.repositories.DestinationAddressCache;
 import com.shopsphere.order_service.repositories.ShippingDetailsCache;
-import com.shopsphere.order_service.services.client.ICacheService;
+import com.shopsphere.order_service.services.ICacheService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

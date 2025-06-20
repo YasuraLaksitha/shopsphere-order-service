@@ -10,8 +10,8 @@ import com.shopsphere.order_service.exceptions.ResourceNotFoundException;
 import com.shopsphere.order_service.repositories.OrderItemRepository;
 import com.shopsphere.order_service.repositories.OrderRepository;
 import com.shopsphere.order_service.services.IOrderService;
-import com.shopsphere.order_service.services.client.ICacheService;
-import com.shopsphere.order_service.services.client.PaymentFeignClient;
+import com.shopsphere.order_service.services.ICacheService;
+import com.shopsphere.order_service.services.IPaymentService;
 import com.shopsphere.order_service.services.client.ShippingFeignClient;
 import com.shopsphere.order_service.utils.OrderStatus;
 import com.shopsphere.order_service.utils.PaymentMethod;
@@ -31,6 +31,7 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 
 @Slf4j
 @Service
@@ -43,7 +44,7 @@ public class OrderServiceImpl implements IOrderService {
 
     private final ObjectMapper objectMapper;
 
-    private final PaymentFeignClient paymentFeignClient;
+    private final IPaymentService paymentService;
 
     private final ShippingFeignClient shippingFeignClient;
 
@@ -125,7 +126,7 @@ public class OrderServiceImpl implements IOrderService {
         };
     }
 
-    private <T> T getPaymentSessionURL(final OrderEntity order) {
+    private <T> T getPaymentSessionURL(final OrderEntity order) throws ExecutionException, InterruptedException {
         final List<OrderItemDTO> orderItems = order.getOrderItemIds().stream()
                 .map(orderItemId -> objectMapper.convertValue(
                         orderItemRepository.findById(orderItemId), OrderItemDTO.class))
@@ -138,10 +139,7 @@ public class OrderServiceImpl implements IOrderService {
                 .paymentMethod(order.getPaymentMethod())
                 .build();
 
-        if (order.getPaymentMethod() == PaymentMethod.STRIPE)
-            return (T) paymentFeignClient.handleStripeCheckoutRequest(checkoutRequest).getBody();
-
-        throw new UnsupportedOperationException("Unsupported payment method");
+        return (T) paymentService.createSessionURL(checkoutRequest, order.getPaymentMethod()).get();
     }
 
     @Override

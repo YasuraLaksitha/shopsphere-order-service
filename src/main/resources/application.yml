@@ -32,3 +32,43 @@ eureka:
   client:
     service-url:
       defaultZone: http://localhost:8071/eureka
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: '*'
+  health:
+    readiness-state:
+      enabled: true
+    liveness-state:
+      enabled: true
+  endpoint:
+    probes:
+      health:
+        enabled: true
+
+resilience4j.circuitbreaker:
+  instances:
+    stripeService:
+      slidingType: COUNT_BASED
+      slidingWindowSize: 20
+      failureRateThreshold: 10
+      waitDurationInOpenState: 10s
+      permittedNumberOfCallsInHalfOpenState: 3
+
+resilience4j.timelimiter:
+  instances:
+    stripeService:
+      timeoutDuration: 5s
+      cancelRunningFuture: false
+
+resilience4j.retry:
+  instances:
+    stripeService:
+      maxAttempts: 4
+      waitDuration: 2s
+      enableExponentialBackoff: true
+      exponentialBackoffMultiplier: 2
+      retryExceptions:
+        - java.lang.Exception

@@ -4,11 +4,11 @@ import com.shopsphere.order_service.utils.OrderStatus;
 
 public final class ApplicationDefaultConstants {
 
-    public static final String  ORDER_SORT_ORDER = "ASC";
+    public static final String ORDER_SORT_ORDER = "ASC";
 
     public static final OrderStatus ORDER_STATUS_INIT = OrderStatus.INITIATED;
 
-    public static final Double ORDER_PRICE_INIT = 0.00 ;
+    public static final Double ORDER_PRICE_INIT = 0.00;
 
     public static final String PAGE_NUMBER = "0";
 
@@ -20,5 +20,8 @@ public final class ApplicationDefaultConstants {
 
     public static final String RESPONSE_MESSAGE_417 = "Something went wrong. Try again later";
 
-    private ApplicationDefaultConstants() {}
+    public static final String RESPONSE_MESSAGE_503 = "Service is temporary unavailable. try again later";
+
+    private ApplicationDefaultConstants() {
+    }
 }
