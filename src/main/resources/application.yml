@@ -56,6 +56,12 @@ resilience4j.circuitbreaker:
       failureRateThreshold: 10
       waitDurationInOpenState: 10s
       permittedNumberOfCallsInHalfOpenState: 3
+    shippingService:
+      slidingType: COUNT_BASED
+      slidingWindowSize: 10
+      failureRateThreshold: 5
+      waitDurationInOpenState: 10s
+      permittedNumberOfCallsInHalfOpenState: 3
 
 resilience4j.timelimiter:
   instances:

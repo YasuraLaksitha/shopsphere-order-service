@@ -12,7 +12,7 @@ import com.shopsphere.order_service.repositories.OrderRepository;
 import com.shopsphere.order_service.services.IOrderService;
 import com.shopsphere.order_service.services.ICacheService;
 import com.shopsphere.order_service.services.IPaymentService;
-import com.shopsphere.order_service.services.client.ShippingFeignClient;
+import com.shopsphere.order_service.services.IShippingService;
 import com.shopsphere.order_service.utils.OrderStatus;
 import com.shopsphere.order_service.utils.PaymentMethod;
 import lombok.RequiredArgsConstructor;
@@ -46,7 +46,7 @@ public class OrderServiceImpl implements IOrderService {
 
     private final IPaymentService paymentService;
 
-    private final ShippingFeignClient shippingFeignClient;
+    private final IShippingService shippingService;
 
     private final ICacheService cacheService;
 
@@ -61,36 +61,44 @@ public class OrderServiceImpl implements IOrderService {
         if (optionalOrder.isEmpty()) {
             orderEntity = initializeOrder(orderRequest);
             orderEntity.setOrderStatus(OrderStatus.PENDING);
-        } else if (optionalOrder.get().getOrderStatus() == OrderStatus.FAILED) {
+
+        } else if (optionalOrder.get().getOrderStatus() == OrderStatus.PAYMENT_FAILED
+                || optionalOrder.get().getOrderStatus() == OrderStatus.SHIPPING_FAILED) {
             orderEntity = optionalOrder.get();
             this.updateOrderStatus(optionalOrder.get().getOrderId(), OrderStatus.RETRY.name());
+
         } else
             throw new ResourceAlreadyExistException("order", "order code", orderRequest.getCode());
 
-        orderRequest.getOrderItems().forEach(orderItemDTO -> {
-            final OrderItemEntity newOrderItem = objectMapper.convertValue(orderItemDTO, OrderItemEntity.class);
-            newOrderItem.setOrderId(orderEntity.getOrderId());
+        if (orderEntity.getOrderStatus() == OrderStatus.PENDING) {
+            orderRequest.getOrderItems().forEach(orderItemDTO -> {
+                final OrderItemEntity newOrderItem = objectMapper.convertValue(orderItemDTO, OrderItemEntity.class);
+                newOrderItem.setOrderId(orderEntity.getOrderId());
 
-            final OrderItemEntity itemEntity = orderItemRepository.save(newOrderItem);
-            orderEntity.getOrderItemIds().add(itemEntity.getOrderItemId());
-        });
+                final OrderItemEntity itemEntity = orderItemRepository.save(newOrderItem);
+                orderEntity.getOrderItemIds().add(itemEntity.getOrderItemId());
+            });
+        }
 
         final OrderEntity savedOrder = orderRepository.save(orderEntity);
 
         try {
             cacheService.saveShippingDetailsIntoCache(orderRequest.getShippingRequest(), savedOrder.getOrderId(), savedOrder.getCreatedBy());
-            if (savedOrder.getOrderStatus() != OrderStatus.PAID)
+
+            if (savedOrder.getOrderStatus() == OrderStatus.PAYMENT_FAILED ||
+                    savedOrder.getOrderStatus() == OrderStatus.PENDING)
                 return getPaymentSessionURL(savedOrder);
+
         } catch (Exception e) {
-            this.updateOrderStatus(savedOrder.getOrderId(), OrderStatus.FAILED.name());
+            this.updateOrderStatus(savedOrder.getOrderId(), OrderStatus.PAYMENT_FAILED.name());
             throw new RuntimeException(e);
         }
-        return (T) handleShippingRequest(savedOrder.getOrderId(), savedOrder.getCreatedBy());
+        return (T) handleShippingRequest(savedOrder.getOrderId());
     }
 
     @Override
-    public ShippingResponseDTO handleShippingRequest(Long orderId, String userId) {
-        return shippingFeignClient.createShippingObject(cacheService.retrieveByOrderId(orderId)).getBody();
+    public ShippingResponseDTO handleShippingRequest(Long orderId) {
+        return shippingService.sendShippingRequest(cacheService.retrieveShippingRequestByOrderId(orderId));
     }
 
     /**
@@ -148,8 +156,8 @@ public class OrderServiceImpl implements IOrderService {
 
             final String status = orderStatus.toUpperCase();
 
-            if (OrderStatus.FAILED.name().equals(status))
-                orderEntity.setOrderStatus(OrderStatus.FAILED);
+            if (OrderStatus.PAYMENT_FAILED.name().equals(status))
+                orderEntity.setOrderStatus(OrderStatus.PAYMENT_FAILED);
             else if (OrderStatus.PAID.name().equals(status)) {
                 orderEntity.setOrderStatus(OrderStatus.PAID);
             }

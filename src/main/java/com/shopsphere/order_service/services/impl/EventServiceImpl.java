@@ -35,17 +35,16 @@ public class EventServiceImpl implements IEventService {
                         log.info("Before Feign call - UserContext: {}", UserContext.get());
 
                         try {
-                            orderService.handleShippingRequest(orderId, userId);
+                            orderService.handleShippingRequest(orderId);
                         } catch (RuntimeException e) {
-                            orderService.updateOrderStatus(orderId, OrderStatus.FAILED.name());
+                            orderService.updateOrderStatus(orderId, OrderStatus.SHIPPING_FAILED.name());
                             throw new RuntimeException(e);
                         }
                     }
 
                     case "payment_intent.payment_failed",
                          "checkout.session.async_payment_failed",
-                         "charge.failed" ->
-                            orderService.updateOrderStatus(Long.valueOf(orderId), OrderStatus.FAILED.name());
+                         "charge.failed" -> orderService.updateOrderStatus(orderId, OrderStatus.PAYMENT_FAILED.name());
                 }
             }
         });

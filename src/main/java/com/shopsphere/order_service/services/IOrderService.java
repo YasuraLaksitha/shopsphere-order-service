@@ -17,9 +17,8 @@ public interface IOrderService {
     /**
      *
      * @param orderId - orderId
-     * @param userId - user id
      */
-    ShippingResponseDTO handleShippingRequest(final Long orderId,final String userId);
+    ShippingResponseDTO handleShippingRequest(final Long orderId);
 
     /**
      *

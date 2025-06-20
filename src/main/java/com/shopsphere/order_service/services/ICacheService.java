@@ -17,5 +17,5 @@ public interface ICacheService {
      * @param orderId - orderId
      * @return - shippingRequest object
      */
-    ShippingRequestDTO retrieveByOrderId(final Long orderId);
+    ShippingRequestDTO retrieveShippingRequestByOrderId(final Long orderId);
 }

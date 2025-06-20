@@ -22,6 +22,8 @@ public final class ApplicationDefaultConstants {
 
     public static final String RESPONSE_MESSAGE_503 = "Service is temporary unavailable. try again later";
 
+    public static final String RESPONSE_MESSAGE_201 = "Resource created successfully";
+
     private ApplicationDefaultConstants() {
     }
 }

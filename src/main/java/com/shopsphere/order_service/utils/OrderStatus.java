@@ -14,7 +14,9 @@ public enum OrderStatus {
 
     CANCELLED,
 
-    FAILED,
+    SHIPPING_FAILED,
+
+    PAYMENT_FAILED,
 
     RETURNED,
 

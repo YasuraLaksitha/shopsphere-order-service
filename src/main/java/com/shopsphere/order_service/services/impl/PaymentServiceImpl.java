@@ -50,7 +50,7 @@ public class PaymentServiceImpl implements IPaymentService {
             CheckoutRequestDTO checkoutRequestDTO, PaymentMethod ignoredMethod, Throwable ignoredThrowable) {
 
         orderRepository.findById(checkoutRequestDTO.getOrderId()).ifPresent(orderEntity -> {
-            orderEntity.setOrderStatus(OrderStatus.FAILED);
+            orderEntity.setOrderStatus(OrderStatus.SHIPPING_FAILED);
             orderRepository.save(orderEntity);
         });
 
