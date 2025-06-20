@@ -10,7 +10,7 @@ public interface ICacheService {
      * @param orderId            - orderID
      * @param userId             - user id
      */
-    void saveIntoCache(final ShippingRequestDTO shippingRequestDTO, final Long orderId, final String userId);
+    void saveShippingDetailsIntoCache(final ShippingRequestDTO shippingRequestDTO, final Long orderId, final String userId);
 
     /**
      *

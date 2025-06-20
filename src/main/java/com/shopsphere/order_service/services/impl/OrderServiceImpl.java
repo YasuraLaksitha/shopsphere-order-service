@@ -78,7 +78,7 @@ public class OrderServiceImpl implements IOrderService {
         final OrderEntity savedOrder = orderRepository.save(orderEntity);
 
         try {
-            cacheService.saveIntoCache(orderRequest.getShippingRequest(), savedOrder.getOrderId(), savedOrder.getCreatedBy());
+            cacheService.saveShippingDetailsIntoCache(orderRequest.getShippingRequest(), savedOrder.getOrderId(), savedOrder.getCreatedBy());
             if (savedOrder.getOrderStatus() != OrderStatus.PAID)
                 return getPaymentSessionURL(savedOrder);
         } catch (Exception e) {
@@ -194,10 +194,7 @@ public class OrderServiceImpl implements IOrderService {
         final PageRequest pageRequest = PageRequest.of(pageNumber, pageSize, sortOrderBy);
 
         Page<OrderEntity> orderEntityPage;
-        if (spec != null)
-            orderEntityPage = orderRepository.findAll(spec, pageRequest);
-        else
-            orderEntityPage = orderRepository.findAll(pageRequest);
+        orderEntityPage = orderRepository.findAll(spec, pageRequest);
 
         final List<OrderRequestDTO> requestDTOS = orderEntityPage.getContent().stream().map(orderEntity -> {
             final List<OrderItemDTO> itemDTOS = orderItemRepository.findAllById(orderEntity.getOrderItemIds())

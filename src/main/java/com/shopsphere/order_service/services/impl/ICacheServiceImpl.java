@@ -25,7 +25,7 @@ public class ICacheServiceImpl implements ICacheService {
     private final ObjectMapper objectMapper;
 
     @Override
-    public void saveIntoCache(ShippingRequestDTO shippingRequestDTO, Long orderId, String userId) {
+    public void saveShippingDetailsIntoCache(ShippingRequestDTO shippingRequestDTO, Long orderId, String userId) {
         final ShippingDetailsEntity shippingDetailsEntity = initializeShippingDetailsEntity(shippingRequestDTO, orderId,userId);
 
         final DestinationAddressEntity destinationAddressEntity = objectMapper
