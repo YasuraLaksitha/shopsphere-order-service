@@ -1,6 +1,6 @@
 package com.shopsphere.order_service.services.impl;
 
-import com.shopsphere.order_service.constants.ApplicationDefaultConstants;
+import com.shopsphere.order_service.dto.FailureEventDTO;
 import com.shopsphere.order_service.dto.ShippingRequestDTO;
 import com.shopsphere.order_service.dto.ShippingResponseDTO;
 import com.shopsphere.order_service.repositories.OrderRepository;
@@ -9,7 +9,7 @@ import com.shopsphere.order_service.services.client.ShippingFeignClient;
 import com.shopsphere.order_service.utils.OrderStatus;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
+import org.springframework.cloud.stream.function.StreamBridge;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -21,6 +21,8 @@ public class IShippingServiceImpl implements IShippingService {
     private final ShippingFeignClient shippingFeignClient;
 
     private final OrderRepository orderRepository;
+
+    private final StreamBridge streamBridge;
 
     @CircuitBreaker(name = "shippingService", fallbackMethod = "sendShippingRequestFallback")
     @Override
@@ -35,10 +37,14 @@ public class IShippingServiceImpl implements IShippingService {
             orderRepository.save(orderEntity);
         });
 
-        return ShippingResponseDTO.builder()
-                .status(HttpStatus.CREATED)
-                .message(ApplicationDefaultConstants.RESPONSE_MESSAGE_201)
+        final FailureEventDTO<ShippingRequestDTO> failureEventDTO = FailureEventDTO.<ShippingRequestDTO>builder()
+                .reason("Service unavailable")
+                .failureObject(shippingRequestDTO)
                 .timestamp(LocalDateTime.now())
                 .build();
+
+        streamBridge.send("shippingFailure-out-0", failureEventDTO);
+
+        return null;
     }
 }

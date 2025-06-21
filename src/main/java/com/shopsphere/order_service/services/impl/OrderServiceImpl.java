@@ -62,8 +62,7 @@ public class OrderServiceImpl implements IOrderService {
             orderEntity = initializeOrder(orderRequest);
             orderEntity.setOrderStatus(OrderStatus.PENDING);
 
-        } else if (optionalOrder.get().getOrderStatus() == OrderStatus.PAYMENT_FAILED
-                || optionalOrder.get().getOrderStatus() == OrderStatus.SHIPPING_FAILED) {
+        } else if (optionalOrder.get().getOrderStatus() == OrderStatus.PAYMENT_FAILED) {
             orderEntity = optionalOrder.get();
             this.updateOrderStatus(optionalOrder.get().getOrderId(), OrderStatus.RETRY.name());
 
@@ -93,12 +92,19 @@ public class OrderServiceImpl implements IOrderService {
             this.updateOrderStatus(savedOrder.getOrderId(), OrderStatus.PAYMENT_FAILED.name());
             throw new RuntimeException(e);
         }
-        return (T) handleShippingRequest(savedOrder.getOrderId());
+        return null;
     }
 
     @Override
     public ShippingResponseDTO handleShippingRequest(Long orderId) {
-        return shippingService.sendShippingRequest(cacheService.retrieveShippingRequestByOrderId(orderId));
+        final ShippingResponseDTO shippingResponseDTO = shippingService.sendShippingRequest(cacheService.retrieveShippingRequestByOrderId(orderId));
+
+        final OrderStatus status = Objects.nonNull(shippingResponseDTO) ?
+                OrderStatus.LABELED :
+                OrderStatus.SHIPPING_FAILED;
+        this.updateOrderStatus(orderId, status.name());
+
+        return shippingResponseDTO;
     }
 
     /**
@@ -156,12 +162,12 @@ public class OrderServiceImpl implements IOrderService {
 
             final String status = orderStatus.toUpperCase();
 
-            if (OrderStatus.PAYMENT_FAILED.name().equals(status))
-                orderEntity.setOrderStatus(OrderStatus.PAYMENT_FAILED);
-            else if (OrderStatus.PAID.name().equals(status)) {
-                orderEntity.setOrderStatus(OrderStatus.PAID);
-            }
+            final OrderStatus newOrderStatus = Arrays.stream(OrderStatus.values())
+                    .filter(s -> s.name().equals(status))
+                    .findFirst()
+                    .orElseThrow(() -> new ResourceNotFoundException("order status", "name", status));
 
+            orderEntity.setOrderStatus(newOrderStatus);
             orderRepository.save(orderEntity);
         });
     }

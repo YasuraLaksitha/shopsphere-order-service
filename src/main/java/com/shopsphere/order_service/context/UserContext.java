@@ -2,17 +2,20 @@ package com.shopsphere.order_service.context;
 
 public class UserContext {
 
-    private static final ThreadLocal<String> currectUserContext = new ThreadLocal<>();
+    private static final ThreadLocal<String> currentUserContext = new ThreadLocal<>();
 
     public static void set(final String userId) {
-        currectUserContext.set(userId);
+        currentUserContext.set(userId);
     }
 
     public static String get() {
-        return currectUserContext.get();
+        return currentUserContext.get();
     }
 
     public static void clear() {
-        currectUserContext.remove();
+        currentUserContext.remove();
+    }
+
+    private UserContext() {
     }
 }

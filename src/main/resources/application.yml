@@ -17,10 +17,17 @@ spring:
       ddl-auto: create
     show-sql: true
   cloud:
+    function:
+      definition: handleRetryShippingEvent
     stream:
       bindings:
         productUpdate-out-0:
           destination: send-productUpdate
+        shippingFailure-out-0:
+          destination: shipping.failure.events
+        handleRetryShippingEvent-in-0:
+          destination: shipping.failure.events
+          group: orders
       kafka:
         binder:
           broker:
@@ -78,3 +85,9 @@ resilience4j.retry:
       exponentialBackoffMultiplier: 2
       retryExceptions:
         - java.lang.Exception
+
+logging:
+  level:
+    com:
+      shopsphere:
+        order_service: DEBUG
