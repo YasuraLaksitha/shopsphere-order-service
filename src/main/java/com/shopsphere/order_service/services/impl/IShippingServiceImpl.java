@@ -10,9 +10,12 @@ import com.shopsphere.order_service.utils.OrderStatus;
 import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cloud.stream.function.StreamBridge;
+import org.springframework.messaging.Message;
+import org.springframework.messaging.support.MessageBuilder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -43,7 +46,12 @@ public class IShippingServiceImpl implements IShippingService {
                 .timestamp(LocalDateTime.now())
                 .build();
 
-        streamBridge.send("shippingFailure-out-0", failureEventDTO);
+        final Message<FailureEventDTO<ShippingRequestDTO>> failureEventMessage = MessageBuilder
+                .withPayload(failureEventDTO)
+                .setHeader("X-Order-Id", shippingRequestDTO.getOrderId())
+                .build();
+
+        streamBridge.send("shippingFailure-out-0", failureEventMessage);
 
         return null;
     }
