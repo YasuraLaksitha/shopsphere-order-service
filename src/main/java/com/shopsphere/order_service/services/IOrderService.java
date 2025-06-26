@@ -35,13 +35,14 @@ public interface IOrderService {
 
     /**
      *
-     * @param sortBy       - order field name
-     * @param sortOrder    - asc,desc
-     * @param pageNumber   - current page
-     * @param pageSize - data count
+     * @param sortBy     - order field name
+     * @param sortOrder  - asc,desc
+     * @param pageNumber - current page
+     * @param pageSize   - data count
+     * @param userId - user Id
      * @return pagination response
      */
-    PaginationResponseDTO<OrderRequestDTO> filterOrders(final String sortBy, final String sortOrder, final int pageNumber, final int pageSize, final String orderDate);
+    PaginationResponseDTO<OrderRequestDTO> filterOrders(final String sortBy, final String sortOrder, final int pageNumber, final int pageSize, final String orderDate, String userId);
 
     /**
      *

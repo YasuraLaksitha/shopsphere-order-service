@@ -186,10 +186,13 @@ public class OrderServiceImpl implements IOrderService {
 
     @Override
     public PaginationResponseDTO<OrderRequestDTO> filterOrders
-            (String sortBy, String sortOrder, int pageNumber, int pageSize, String orderDate) {
+            (String sortBy, String sortOrder, int pageNumber, int pageSize, String orderDate, String userId) {
 
         Specification<OrderEntity> spec = (root, query, criteriaBuilder) ->
-                criteriaBuilder.isFalse(root.get("isDeleted"));
+                criteriaBuilder.equal(criteriaBuilder.lower(root.get("createdBy")), userId.toLowerCase());
+
+        spec = spec.and((root, query, criteriaBuilder) ->
+                criteriaBuilder.isFalse(root.get("isDeleted")));
 
         if (StringUtils.hasText(orderDate)) {
             final LocalDate localDate = this.formatDate(orderDate);
