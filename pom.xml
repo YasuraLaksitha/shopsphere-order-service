@@ -11,6 +11,7 @@
 	<groupId>com.shopsphere</groupId>
 	<artifactId>order-service</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
+	<packaging>jar</packaging>
 	<name>order-service</name>
 	<description>Order service for ShopSphere ecommerce platform</description>
 	<url/>
@@ -126,6 +127,16 @@
 
 	<build>
 		<plugins>
+			<plugin>
+				<groupId>com.google.cloud.tools</groupId>
+				<artifactId>jib-maven-plugin</artifactId>
+				<version>3.4.5</version>
+				<configuration>
+					<to>
+						<image>yasuradev/${project.artifactId}:ss-${project.version}</image>
+					</to>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
