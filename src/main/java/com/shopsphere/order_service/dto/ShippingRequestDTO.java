@@ -20,7 +20,7 @@ public class ShippingRequestDTO {
     private Long orderId;
 
     @Schema(description = "Order tracking number", example = "12345689")
-    @NotEmpty(message = "Tracking number required for track order")
+    @NotNull(message = "Tracking number required for track order")
     private UUID trackingNumber;
 
     @Schema(description = "Destination address information")

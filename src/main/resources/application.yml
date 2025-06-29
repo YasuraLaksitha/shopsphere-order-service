@@ -53,8 +53,8 @@ management:
     liveness-state:
       enabled: true
   endpoint:
-    probes:
-      health:
+    health:
+      probes:
         enabled: true
 
 resilience4j.circuitbreaker:
@@ -93,3 +93,8 @@ logging:
     com:
       shopsphere:
         order_service: DEBUG
+
+springdoc:
+  swagger-ui:
+    url: /shopsphere/orders/v3/api-docs
+    config-url: /shopsphere/orders/v3/api-docs/swagger-config
