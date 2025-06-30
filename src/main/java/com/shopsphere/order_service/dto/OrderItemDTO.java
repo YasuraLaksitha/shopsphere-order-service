@@ -7,6 +7,8 @@ import jakarta.validation.constraints.Positive;
 import lombok.Builder;
 import lombok.Data;
 
+import java.math.BigDecimal;
+
 @Data
 @Builder
 @Schema(
@@ -27,10 +29,10 @@ public class OrderItemDTO {
     @Schema(description = "Total item price of one a single product that user favored to purchase")
     @NotNull(message = "Unit price is required")
     @Positive(message = "Unit price must be positive")
-    private Double unitPrice;
+    private BigDecimal unitPrice;
 
     @Schema(description = "Total price for order")
     @NotNull(message = "Total price is required")
     @Positive(message = "Total price must be positive")
-    private Double totalPrice;
+    private BigDecimal totalPrice;
 }

@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
+import java.math.BigDecimal;
+
 @EqualsAndHashCode(callSuper = true)
 @Data
 @Entity
@@ -22,7 +24,7 @@ public class OrderItemEntity extends BaseEntity {
 
     private Integer quantity;
 
-    private Double unitPrice;
+    private BigDecimal unitPrice;
 
-    private Double totalPrice;
+    private BigDecimal totalPrice;
 }

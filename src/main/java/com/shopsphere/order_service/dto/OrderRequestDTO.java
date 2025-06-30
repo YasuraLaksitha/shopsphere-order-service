@@ -8,6 +8,7 @@ import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Builder;
 import lombok.Data;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Data
@@ -36,7 +37,7 @@ public class OrderRequestDTO {
     @Schema(description = "Order price to be payed is USD", example = "113.00")
     @NotNull(message = "Order price is required")
     @PositiveOrZero(message = "Order price should be positive or zero")
-    private Double totalOrderPrice;
+    private BigDecimal totalOrderPrice;
 
     @Schema(description = "Destination details to handle shipping")
     @NotNull(message = "Shipping details required")
