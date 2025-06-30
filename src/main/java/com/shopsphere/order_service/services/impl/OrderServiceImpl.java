@@ -25,6 +25,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.LocalTime;
@@ -76,6 +77,7 @@ public class OrderServiceImpl implements IOrderService {
 
                 final OrderItemEntity itemEntity = orderItemRepository.save(newOrderItem);
                 orderEntity.getOrderItemIds().add(itemEntity.getOrderItemId());
+                orderEntity.setTotalOrderPrice(orderEntity.getTotalOrderPrice().add(itemEntity.getTotalPrice()));
             });
         }
 
@@ -96,7 +98,7 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     @Override
-    public ShippingResponseDTO handleShippingRequest(Long orderId) {
+    public void handleShippingRequest(Long orderId) {
         final ShippingResponseDTO shippingResponseDTO = shippingService.sendShippingRequest(cacheService.retrieveShippingRequestByOrderId(orderId));
 
         final OrderStatus status = Objects.nonNull(shippingResponseDTO) ?
@@ -104,7 +106,6 @@ public class OrderServiceImpl implements IOrderService {
                 OrderStatus.SHIPPING_FAILED;
         this.updateOrderStatus(orderId, status.name());
 
-        return shippingResponseDTO;
     }
 
     /**
@@ -119,7 +120,7 @@ public class OrderServiceImpl implements IOrderService {
         orderEntity.setPaymentMethod(getPaymentMethod(request.getPaymentMethod()));
         orderEntity.setOrderItemIds(new ArrayList<>());
         orderEntity.setOrderStatus(ApplicationDefaultConstants.ORDER_STATUS_INIT);
-        orderEntity.setTotalOrderPrice(ApplicationDefaultConstants.ORDER_PRICE_INIT);
+        orderEntity.setTotalOrderPrice(BigDecimal.valueOf(ApplicationDefaultConstants.ORDER_PRICE_INIT));
 
         return orderRepository.save(orderEntity);
     }
@@ -132,7 +133,7 @@ public class OrderServiceImpl implements IOrderService {
     private PaymentMethod getPaymentMethod(final String paymentMethod) {
 
         return switch (paymentMethod.toLowerCase()) {
-            case "applepay" -> PaymentMethod.APPLPAY;
+            case "applepay" -> PaymentMethod.APPLEPAY;
             case "paypal" -> PaymentMethod.PAYPAL;
             case "stripe" -> PaymentMethod.STRIPE;
 
