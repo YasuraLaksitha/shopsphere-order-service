@@ -1,6 +1,6 @@
 package com.shopsphere.order_service.context;
 
-public class UserContext {
+public final class UserContext {
 
     private static final ThreadLocal<String> currentUserContext = new ThreadLocal<>();
 
