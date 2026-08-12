@@ -46,7 +46,7 @@ management:
   endpoints:
     web:
       exposure:
-        include: '*'
+        include: health,info
   health:
     readiness-state:
       enabled: true
